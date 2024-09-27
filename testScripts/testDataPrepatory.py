@@ -499,7 +499,6 @@ def make_data_tuple_list(one_hour_kline_data_list, dailyDecision_list, one_day_k
     one_day_kline_data_list = removeNoneFromList(one_day_kline_data_list)
     for decision in dailyDecision_list:
         decisionDay = decision.date.date()
-        decisionDay = decisionDay + timedelta(days=1)
         hourlyDataList = []  # hourlyDataList for the day of decision
         for hourlyDataItem in one_hour_kline_data_list:
             hourlyDataItemDay = hourlyDataItem.opening_timestamp.date()
@@ -776,7 +775,7 @@ def sortDecisionListByPhaseIndex(decision_data_list):
 def generateBasicTestTupleList():
     testTupleList = []
     source_data_list = fetch_four_hours_kline_data_list() # eg. 1 day
-    #control_data_list = fetch_one_minute_kline_data_list() # eg. 1 hours
+    control_data_list = fetch_one_minute_kline_data_list() # eg. 1 hours
     decision_data_list = fetch_four_hour_decision_list()
     decision_data_list = sortDecisionListByPhaseIndex(decision_data_list)
 
