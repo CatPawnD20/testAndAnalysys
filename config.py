@@ -1,6 +1,6 @@
 # Test dates
-start_date = '2024-07-01'
-end_date = '2024-08-09'
+start_date = '2024-01-01'
+end_date = '2024-09-25'
 starting_bitcoin = 1  # starting bitcoin amount
 
 decisionType = "MC_V1_ENS_XGB_NN_BODY_4H" #name of the decision table
