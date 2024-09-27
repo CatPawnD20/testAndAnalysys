@@ -1,4 +1,4 @@
-from databaseScripts.classes.klineBased.OneDayKline import OneDayKline
+from databaseScripts.classes.klineBased.FourHoursKline import FourHoursKline
 import psycopg2
 
 class FourHoursKlineDB:
@@ -40,7 +40,7 @@ class FourHoursKlineDB:
             if result is None:
                 return None
 
-            four_hours_kline = OneDayKline(result[1], result[2], result[3], result[4], result[5], result[6], result[7],
+            four_hours_kline = FourHoursKline(result[1], result[2], result[3], result[4], result[5], result[6], result[7],
                                         result[8], result[9], result[10], result[11], result[12])
             four_hours_kline.id = result[0]
 

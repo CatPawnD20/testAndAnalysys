@@ -15,8 +15,8 @@ def generateTradeList(testDataList):
 
 def doTest():
     testData = testDataPrepatory.getTestTupleList()
-    tradeList = generateTradeList(testData)
-    readableTradeList = tradeMaker.makeReadableTradeList(tradeList)
-    controlledTradeList = tradeMaker.controlTradeList(readableTradeList)
-    print("TradeList")
-    tradeMaker.printTradeList(controlledTradeList)
+    #tradeList = generateTradeList(testData)
+    #readableTradeList = tradeMaker.makeReadableTradeList(tradeList)
+    #controlledTradeList = tradeMaker.controlTradeList(readableTradeList)
+    #print("TradeList")
+    #tradeMaker.printTradeList(controlledTradeList)

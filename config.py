@@ -1,9 +1,14 @@
 # Test dates
-start_date = '2024-01-01'
-end_date = '2024-09-25'
+start_date = '2024-01-01' # start date of the test ### start date + 1 day + 1 phase
+end_date = '2024-09-25' # end date of the test ###  end date - 1 phase
+
+#warning ### sources  -----------------> start from  -----------------> start_date +1day + 1phase ----------------->end_date
+#warning ### decision -----------------> start from  -----------------> start date +1day          ----------------->end_date - 1phase
+#warning ### control  -----------------> start from  -----------------> start date +1day + 1phase ----------------->end_date
+
 starting_bitcoin = 1  # starting bitcoin amount
 
-decisionType = "MC_V1_ENS_XGB_NN_BODY_4H" #name of the decision table
+decisionType = "mc_v1_ens_xgb_nn_body_4h" #name of the decision table
 
 # Confidence rate
 confidence_rate_include = False  # if True, confidence_rate will be included in the test data

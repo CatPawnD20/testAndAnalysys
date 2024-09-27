@@ -111,7 +111,7 @@ def get_daily_decision(id):
     try:
         postgre_obj.connect_db()
         daily_decision_db = DailyDecisionV4ScoreDB(postgre_obj)
-        daily_decision = daily_decision_db.get_daily_decision(id)
+        daily_decision = daily_decision_db.get_decision(id)
         return daily_decision
     finally:
         postgre_obj.disconnect_db()

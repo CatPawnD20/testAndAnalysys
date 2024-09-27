@@ -26,7 +26,7 @@ class DailyDecisionV4ScoreDB:
         finally:
             cursor.close()
 
-    def get_daily_decision(self, id):
+    def get_decision(self, id):
         try:
             connection = self.postgresql.connection
             cursor = connection.cursor()
@@ -36,7 +36,7 @@ class DailyDecisionV4ScoreDB:
 
             if result is None:
                 return None
-            daily_decision = DailyDecisionV4Score(result[1], result[2], result[3])
+            daily_decision = DailyDecisionV4Score(result[1], result[2], result[3], result[4])
             daily_decision.id = result[0]
 
             return daily_decision
