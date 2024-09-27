@@ -6,6 +6,7 @@
 # Decision start date: TestDateConfig.decision_start_date
 # Decision end date: TestDateConfig.decision_end_date
 from datetime import datetime, timedelta
+from operator import itemgetter
 
 import config
 from databaseScripts.PostgreSQL import postgre_obj
@@ -497,7 +498,6 @@ def make_data_tuple_list(one_hour_kline_data_list, dailyDecision_list, one_day_k
     one_hour_kline_data_list = removeNoneFromList(one_hour_kline_data_list)
     one_day_kline_data_list = removeNoneFromList(one_day_kline_data_list)
     for decision in dailyDecision_list:
-
         decisionDay = decision.date.date()
         decisionDay = decisionDay + timedelta(days=1)
         hourlyDataList = []  # hourlyDataList for the day of decision
@@ -767,11 +767,18 @@ def fetch_four_hour_decision_list():
     return four_hour_decision_list
 
 # Description: Test data preparation
+def sortDecisionListByPhaseIndex(decision_data_list):
+    # 'date' ve ardından 'phaseIndex' ile sıralama yap
+    decision_data_list = sorted(decision_data_list, key=lambda obj: (obj.date, obj.phaseIndex))
+    return decision_data_list
+
+
 def generateBasicTestTupleList():
     testTupleList = []
     source_data_list = fetch_four_hours_kline_data_list() # eg. 1 day
-    control_data_list = fetch_one_minute_kline_data_list() # eg. 1 hours
+    #control_data_list = fetch_one_minute_kline_data_list() # eg. 1 hours
     decision_data_list = fetch_four_hour_decision_list()
+    decision_data_list = sortDecisionListByPhaseIndex(decision_data_list)
 
     # decision.id, decision.date, dayKline.openPrice, decision.decision, decision.confidenceRate,dayKline.closePrice,HourlyTuple
     data_tuple_list = make_data_tuple_list(control_data_list, decision_data_list, source_data_list)
