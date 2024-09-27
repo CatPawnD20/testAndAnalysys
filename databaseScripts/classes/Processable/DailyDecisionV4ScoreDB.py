@@ -43,7 +43,7 @@ class DailyDecisionV4ScoreDB:
 
         except psycopg2.Error as e:
             print(e)
-            print("DailyDecisionV4Score çekilirken bir hata oluştu.")
+            print(config.decisionType+ "tablosundan çekilirken bir hata oluştu.")
             return None
 
         finally:
