@@ -532,15 +532,22 @@ def calculate_phase(opening_timestamp):
 def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list):
     # Önceden indeksleme işlemleri
     start_time = datetime.now()
+    i = 0
+    j = 0
+    k = 0
     print("start_time: ", start_time)
     one_minute_index = defaultdict(list)
     for item in one_minute_kline_data_list:
         key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
+        j += 1
+        print(str(j) + '. One minute kline süresi: ', datetime.now() - start_time)
         one_minute_index[key].append(item)
 
     four_hours_index = {}
     for item in four_hours_kline_data_list:
         key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
+        k += 1
+        print(str(k) + '. Four hours kline süresi: ', datetime.now() - start_time)
         four_hours_index[key] = item
 
     # Decision listesi üzerinden işlem
@@ -550,6 +557,10 @@ def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, f
         phase_one_minute_control_data_list = one_minute_index.get(key, [])
         four_hours_kline_data = four_hours_index.get(key)
         hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
+        tuple_time = datetime.now()
+        delta_tuple_time = tuple_time - start_time
+        i += 1
+        print(str(i) + '. Tuple tourmaline süresi: ', delta_tuple_time)
         four_hours_tuple_list.append(hourlyTuple)
     end_time = datetime.now()
     delta_time = end_time - start_time
