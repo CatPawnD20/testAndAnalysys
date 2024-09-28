@@ -5,6 +5,7 @@
 # Data end date: TestDateConfig.data_end_date
 # Decision start date: TestDateConfig.decision_start_date
 # Decision end date: TestDateConfig.decision_end_date
+from collections import defaultdict
 from datetime import datetime, timedelta
 from operator import itemgetter
 
@@ -517,38 +518,43 @@ def control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours
     print("four_hours_decision_list item count: ", len(four_hours_decision_list))
     print("four_hours_kline_data_list item count: ", len(four_hours_kline_data_list))
 
+# Kullanıcının sağladığı calculate_phase fonksiyonu
+def calculate_phase(opening_timestamp):
+    if not hasattr(opening_timestamp, 'hour'):
+        raise ValueError("opening_timestamp parametresi 'hour' (saat) özelliğine sahip olmalıdır.")
+    hour = opening_timestamp.hour
+    if not 0 <= hour <= 23:
+        raise ValueError("Saat değeri 0 ile 23 arasında olmalıdır.")
+    phase = (hour // 4) + 1
+    return phase
 
-
+# Ana fonksiyon
 def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list):
+    # Önceden indeksleme işlemleri
     start_time = datetime.now()
     print("start_time: ", start_time)
-    control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list)
+    one_minute_index = defaultdict(list)
+    for item in one_minute_kline_data_list:
+        key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
+        one_minute_index[key].append(item)
+
+    four_hours_index = {}
+    for item in four_hours_kline_data_list:
+        key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
+        four_hours_index[key] = item
+
+    # Decision listesi üzerinden işlem
     four_hours_tuple_list = []
     for decision in four_hours_decision_list:
-        decision_date = decision.date.date()
-        decision_phase = decision.phaseIndex
-        phase_one_minute_control_data_list = []  # one minute kline data for the phase of decision
-        for one_minute_control_data_item in one_minute_kline_data_list:
-            one_minute_control_data_item_date = one_minute_control_data_item.opening_timestamp.date()
-            one_minute_control_data_item_phase = calculate_phase(one_minute_control_data_item.opening_timestamp)
-            if decision_date == one_minute_control_data_item_date:
-                if decision_phase == one_minute_control_data_item_phase:
-                    phase_one_minute_control_data_list.append(one_minute_control_data_item)
-        four_hours_kline_data = None
-        for four_hours_kline_data_item in four_hours_kline_data_list:
-            four_hours_kline_data_item_date = four_hours_kline_data_item.opening_timestamp.date()
-            four_hours_kline_data_item_phase = calculate_phase(four_hours_kline_data_item.opening_timestamp)
-            if decision_date == four_hours_kline_data_item_date:
-                if decision_phase == four_hours_kline_data_item_phase:
-                    four_hours_kline_data = four_hours_kline_data_item  # dailyData for the day of decision
-                break
+        key = (decision.date.date(), decision.phaseIndex)
+        phase_one_minute_control_data_list = one_minute_index.get(key, [])
+        four_hours_kline_data = four_hours_index.get(key)
         hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
         four_hours_tuple_list.append(hourlyTuple)
     end_time = datetime.now()
     delta_time = end_time - start_time
     print("Tamamlanma süresi: ", delta_time)
     return four_hours_tuple_list
-
 
 def arrangeTestTuple(testTuple, confidence_rate):
     arrangedTestTuple = []
