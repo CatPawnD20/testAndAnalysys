@@ -532,8 +532,7 @@ def calculate_phase(opening_timestamp):
 # Ana fonksiyon
 def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list):
     # Önceden indeksleme işlemleri
-    start_time = datetime.now()
-    print("start_time: ", start_time)
+
     one_minute_index = defaultdict(list)
     for item in one_minute_kline_data_list:
         key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
@@ -552,9 +551,6 @@ def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, f
         four_hours_kline_data = four_hours_index.get(key)
         hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
         four_hours_tuple_list.append(hourlyTuple)
-    end_time = datetime.now()
-    delta_time = end_time - start_time
-    print("Tamamlanma süresi: ", delta_time)
     return four_hours_tuple_list
 
 def arrangeTestTuple(testTuple, confidence_rate):

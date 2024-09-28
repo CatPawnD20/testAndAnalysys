@@ -945,3 +945,8 @@ def losingTradeCount(controlledTradeList):
     return losingTradeCount
 
 
+def lastMoney(tradeList):
+    lastMoney = 0
+    lastTrade = tradeList[-1]
+    lastMoney = lastTrade[7]
+    return lastMoney
