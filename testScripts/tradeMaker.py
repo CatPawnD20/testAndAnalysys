@@ -927,3 +927,21 @@ def controlTradeList(readableTradeList):
         else:
             trade.append('ERROR')
     return readableTradeList
+
+
+def winningTradeCount(controlledTradeList):
+    winningTradeCount = 0
+    for trade in controlledTradeList:
+        if trade[13] == 'WIN and DeActive Stop Loss and DeActive Take Profit' or trade[13] == 'WIN DeActive Stop Loss and DeActive Take Profit' or trade[13] == 'WIN and DeActive Take Profit' or trade[13] == 'Win Take Profit and DeActive Stop loss' or trade[13] == 'Win Below Take Profit and DeActive Stop loss' or trade[13] == 'Win Take Profit' or trade[13] == 'Win Below Take Profit':
+            winningTradeCount += 1
+    return winningTradeCount
+
+
+def losingTradeCount(controlledTradeList):
+    losingTradeCount = 0
+    for trade in controlledTradeList:
+        if trade[13] == 'LOSS DeActive Stop Loss and DeActive Take Profit' or trade[13] == 'LOSS Below Stop Loss and DeActive Take Profit' or trade[13] == 'LOSS and DeActive Stop loss' or trade[13] == 'LOSS Below Stop Loss':
+            losingTradeCount += 1
+    return losingTradeCount
+
+
