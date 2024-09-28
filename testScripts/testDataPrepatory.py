@@ -349,7 +349,7 @@ def fetch_four_hours_kline_data_list():
     start_id = find_FourHourKlineData_start_id()
     end_id = find_FourHourKlineData_end_id()
     four_hour_kline_data_list = find_FourHourKlineData(start_id, end_id)
-    four_hour_kline_data_list = four_hour_kline_data_list_RemoveFirst1Item(four_hour_kline_data_list)
+    #four_hour_kline_data_list = four_hour_kline_data_list_RemoveFirst1Item(four_hour_kline_data_list)
     return four_hour_kline_data_list
 #daily decision data
 def calculate_start_id_dailyDecision(last_decision):
@@ -474,7 +474,7 @@ def fetch_dailyDecision_list():
     return dailyDecision_list
 
 
-def prepHourlyTuple(hourlyDataList, dailyData, decision):
+def prepare_four_hourly_tuple(hourlyDataList, dailyData, decision):
     # hourKline.openDate,dayKline.openPrice,decision.decision,decision.confidenceRate,hourKline.closePrice
     hourlyTuple = []
     for hourlyDataItem in hourlyDataList:
@@ -490,33 +490,64 @@ def removeNoneFromList(list):
             tempList.append(item)
     return tempList
 
-def make_data_tuple_list(one_hour_kline_data_list, dailyDecision_list, one_day_kline_data_list):
-    # make tuple list
-    # find all hourly data for a day of dailyDecision
-    hourlyTupleList = []
-    dailyDecision_list = removeNoneFromList(dailyDecision_list)
-    one_hour_kline_data_list = removeNoneFromList(one_hour_kline_data_list)
-    one_day_kline_data_list = removeNoneFromList(one_day_kline_data_list)
-    for decision in dailyDecision_list:
-        decisionDay = decision.date.date()
-        hourlyDataList = []  # hourlyDataList for the day of decision
-        for hourlyDataItem in one_hour_kline_data_list:
-            hourlyDataItemDay = hourlyDataItem.opening_timestamp.date()
-            #decisionDay = tomorrow of decisionDay
-            if decisionDay == hourlyDataItemDay:
-                hourlyDataList.append(hourlyDataItem)
-        # find the daily data for the day of decision
-        dailyData = None
-        for dailyDataItem in one_day_kline_data_list:
-            if decisionDay == dailyDataItem.opening_timestamp.date():
-                dailyData = dailyDataItem  # dailyData for the day of decision
-                break
-        # hourlyTuple.append((hourlyDataList, dailyData, decision))
-        hourlyTuple = prepHourlyTuple(hourlyDataList, dailyData, decision)
-        hourlyTupleList.append(hourlyTuple)
 
-    # hourKline.openDate,dayKline.openPrice,decision.decision,decision.confidenceRate,hourKline.closePrice
-    return hourlyTupleList
+def calculate_phase(opening_timestamp):
+    if not hasattr(opening_timestamp, 'hour'):
+        raise ValueError("opening_timestamp parametresi 'hour' (saat) özelliğine sahip olmalıdır.")
+    hour = opening_timestamp.hour
+    if not 0 <= hour <= 23:
+        raise ValueError("Saat değeri 0 ile 23 arasında olmalıdır.")
+    phase = (hour // 4) + 1
+    return phase
+
+
+def control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours_decision_list,four_hours_kline_data_list):
+    if len(one_minute_kline_data_list) == 0:
+        raise ValueError("one_minute_kline_data_list is empty.")
+    if len(four_hours_decision_list) == 0:
+        raise ValueError("four_hours_decision_list is empty.")
+    if len(four_hours_kline_data_list) == 0:
+        raise ValueError("four_hours_kline_data_list is empty.")
+    if len(four_hours_kline_data_list) != len(four_hours_decision_list):
+        raise ValueError("four_hours_kline_data_list and four_hours_decision_list have different item count.")
+    if len(one_minute_kline_data_list) / 240 != len(four_hours_kline_data_list):
+        raise ValueError("one_minute_kline_data_list and four_hours_kline_data_list have different item count.")
+    #write item counts for each list
+    print("one_minute_kline_data_list item count: ", len(one_minute_kline_data_list))
+    print("four_hours_decision_list item count: ", len(four_hours_decision_list))
+    print("four_hours_kline_data_list item count: ", len(four_hours_kline_data_list))
+
+
+
+def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list):
+    start_time = datetime.now()
+    print("start_time: ", start_time)
+    control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list)
+    four_hours_tuple_list = []
+    for decision in four_hours_decision_list:
+        decision_date = decision.date.date()
+        decision_phase = decision.phaseIndex
+        phase_one_minute_control_data_list = []  # one minute kline data for the phase of decision
+        for one_minute_control_data_item in one_minute_kline_data_list:
+            one_minute_control_data_item_date = one_minute_control_data_item.opening_timestamp.date()
+            one_minute_control_data_item_phase = calculate_phase(one_minute_control_data_item.opening_timestamp)
+            if decision_date == one_minute_control_data_item_date:
+                if decision_phase == one_minute_control_data_item_phase:
+                    phase_one_minute_control_data_list.append(one_minute_control_data_item)
+        four_hours_kline_data = None
+        for four_hours_kline_data_item in four_hours_kline_data_list:
+            four_hours_kline_data_item_date = four_hours_kline_data_item.opening_timestamp.date()
+            four_hours_kline_data_item_phase = calculate_phase(four_hours_kline_data_item.opening_timestamp)
+            if decision_date == four_hours_kline_data_item_date:
+                if decision_phase == four_hours_kline_data_item_phase:
+                    four_hours_kline_data = four_hours_kline_data_item  # dailyData for the day of decision
+                break
+        hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
+        four_hours_tuple_list.append(hourlyTuple)
+    end_time = datetime.now()
+    delta_time = end_time - start_time
+    print("Tamamlanma süresi: ", delta_time)
+    return four_hours_tuple_list
 
 
 def arrangeTestTuple(testTuple, confidence_rate):
@@ -648,7 +679,7 @@ def fetch_one_minute_kline_data_list():
     start_id = find_OneMinuteKlineData_start_id()
     end_id = find_OneMinuteKlineData_end_id()
     one_minute_kline_data_list = find_OneMinuteKlineData(start_id, end_id)
-    one_minute_kline_data_list = one_minute_kline_data_list_RemoveFirst240Item(one_minute_kline_data_list)
+    #one_minute_kline_data_list = one_minute_kline_data_list_RemoveFirst240Item(one_minute_kline_data_list)
     return one_minute_kline_data_list
 
 # four hour decision data
@@ -758,11 +789,7 @@ def fetch_four_hour_decision_list():
     start_id = find_four_hour_decision_start_id()
     end_id = find_four_hour_decision_end_id()
     four_hour_decision_list = find_four_hour_decision(start_id, end_id)
-    four_hour_decision_list = four_hour_decision_list_RemoveLast1Item(four_hour_decision_list)
-    # foreach decision in dailyDecision_list
-    #make a function that removes noneType decisions
-    four_hour_decision_list = removeNoneFromList(four_hour_decision_list)
-
+    #four_hour_decision_list = four_hour_decision_list_RemoveLast1Item(four_hour_decision_list)
     return four_hour_decision_list
 
 # Description: Test data preparation
@@ -777,7 +804,11 @@ def generateBasicTestTupleList():
     source_data_list = fetch_four_hours_kline_data_list() # eg. 1 day
     control_data_list = fetch_one_minute_kline_data_list() # eg. 1 hours
     decision_data_list = fetch_four_hour_decision_list()
+    source_data_list = removeNoneFromList(source_data_list)
+    control_data_list = removeNoneFromList(control_data_list)
+    decision_data_list = removeNoneFromList(decision_data_list)
     decision_data_list = sortDecisionListByPhaseIndex(decision_data_list)
+
 
     # decision.id, decision.date, dayKline.openPrice, decision.decision, decision.confidenceRate,dayKline.closePrice,HourlyTuple
     data_tuple_list = make_data_tuple_list(control_data_list, decision_data_list, source_data_list)

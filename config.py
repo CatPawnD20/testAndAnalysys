@@ -1,10 +1,10 @@
 # Test dates
-start_date = '2024-01-01' # start date of the test ### start date + 1 day + 1 phase
-end_date = '2024-09-25' # end date of the test ###  end date - 1 phase
+start_date = '2024-01-01' # start date of the test ### start date + 1 day
+end_date = '2024-09-25' # end date must be one day before from the last date of your data
 
-#warning ### sources  -----------------> start from  -----------------> start_date +1day + 1phase ----------------->end_date
-#warning ### decision -----------------> start from  -----------------> start date +1day          ----------------->end_date - 1phase
-#warning ### control  -----------------> start from  -----------------> start date +1day + 1phase ----------------->end_date
+#warning ### sources  -----------------> start from  -----------------> start_date +1day ----------------->end_date
+#warning ### decision -----------------> start from  -----------------> start date +1day ----------------->end_date
+#warning ### control  -----------------> start from  -----------------> start date +1day ----------------->end_date
 
 starting_bitcoin = 1  # starting bitcoin amount
 
