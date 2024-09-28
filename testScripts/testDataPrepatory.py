@@ -684,7 +684,11 @@ def find_OneMinuteKlineData_end_id():
 def fetch_one_minute_kline_data_list():
     start_id = find_OneMinuteKlineData_start_id()
     end_id = find_OneMinuteKlineData_end_id()
+    start_time = datetime.now()
     one_minute_kline_data_list = find_OneMinuteKlineData(start_id, end_id)
+    end_time = datetime.now()
+    delta_time = end_time - start_time
+    print("Tamamlanma süresi: ", delta_time)
     #one_minute_kline_data_list = one_minute_kline_data_list_RemoveFirst240Item(one_minute_kline_data_list)
     return one_minute_kline_data_list
 
