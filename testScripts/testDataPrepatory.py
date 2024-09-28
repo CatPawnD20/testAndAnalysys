@@ -823,11 +823,11 @@ def generateBasicTestTupleList():
     data_tuple_list = make_data_tuple_list(control_data_list, decision_data_list, source_data_list)
 
     for i in range(len(decision_data_list)):
-        decision = decision_data_list[i]
-        dailyData = source_data_list[i]
-        hourlyDataList = data_tuple_list[i]
-        testTupleList.append((decision.id, dailyData.opening_timestamp, dailyData.opening_price, decision.decision,
-                              decision.confidenceRate, dailyData.closing_price, hourlyDataList))
+        four_hour_decision = decision_data_list[i]
+        four_hour_data = source_data_list[i]
+        one_minute_control_data_tuple_list = data_tuple_list[i]
+        testTupleList.append((four_hour_decision.id, four_hour_data.opening_timestamp, four_hour_data.opening_price, four_hour_decision.decision,
+                              four_hour_decision.confidenceRate, four_hour_data.closing_price, one_minute_control_data_tuple_list))
     return testTupleList
 
 
@@ -877,9 +877,8 @@ def stbDecisionConversion(testTupleList):
 
 def getTestTupleList():
     testTupleList = generateBasicTestTupleList()
-    #testTupleList = stbDecisionConversion(testTupleList)
-    #testTupleList = includeConfidenceRate(testTupleList)
-    #return testTupleList
+    testTupleList = includeConfidenceRate(testTupleList)
+    return testTupleList
 
 
 def writeTradeCount(testTupleList):

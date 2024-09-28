@@ -12,10 +12,9 @@ decisionType = "mc_v1_ens_xgb_nn_body_4h" #name of the decision table
 
 # Confidence rate
 confidence_rate_include = False  # if True, confidence_rate will be included in the test data
-confidence_rate = 0.5   # confidence_rate and above will be included in the test data
+confidence_rate = 0.6   # confidence_rate and above will be included in the test data
 
-# STB decision conversion
-stb_decision_conversion = False  # if True, STB decisions will be converted to buy/sell decisions
+
 stb_trade_print = False  # if True, STB trades will be printed
 # short selling
 short_selling = True  # if True, short selling will be active
