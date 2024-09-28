@@ -13,6 +13,7 @@ def generateTradeList(testDataList):
             #stop the test if the cash and bitcoin are 0
             break
     tradeMaker.before_cash = 0
+    tradeMaker.before_bitcoin = 0
     return tradeList
 
 

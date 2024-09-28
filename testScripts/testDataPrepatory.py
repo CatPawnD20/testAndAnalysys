@@ -351,7 +351,7 @@ def fetch_four_hours_kline_data_list():
     start_id = find_FourHourKlineData_start_id()
     end_id = find_FourHourKlineData_end_id()
     four_hour_kline_data_list = find_FourHourKlineData(start_id, end_id)
-    #four_hour_kline_data_list = four_hour_kline_data_list_RemoveFirst1Item(four_hour_kline_data_list)
+    four_hour_kline_data_list = four_hour_kline_data_list_RemoveFirst1Item(four_hour_kline_data_list)
     return four_hour_kline_data_list
 #daily decision data
 def calculate_start_id_dailyDecision(last_decision):
@@ -526,8 +526,25 @@ def calculate_phase(opening_timestamp):
     hour = opening_timestamp.hour
     if not 0 <= hour <= 23:
         raise ValueError("Saat değeri 0 ile 23 arasında olmalıdır.")
-    phase = (hour // 4) + 1
-    return phase
+    if hour < 4:
+        phase = 6
+        return phase
+    if hour < 8:
+        phase = 1
+        return phase
+    if hour < 12:
+        phase = 2
+        return phase
+    if hour < 16:
+        phase = 3
+        return phase
+    if hour < 20:
+        phase = 4
+        return phase
+    if hour < 24:
+        phase = 5
+        return phase
+    return 0
 
 # Ana fonksiyon
 def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list):
@@ -684,7 +701,8 @@ def fetch_one_minute_kline_data_list():
     start_id = find_OneMinuteKlineData_start_id()
     end_id = find_OneMinuteKlineData_end_id()
     one_minute_kline_data_list = find_OneMinuteKlineData(start_id, end_id)
-    #one_minute_kline_data_list = one_minute_kline_data_list_RemoveFirst240Item(one_minute_kline_data_list)
+    one_minute_kline_data_list = sortControlDataListByDate(one_minute_kline_data_list)
+    one_minute_kline_data_list = one_minute_kline_data_list_RemoveFirst240Item(one_minute_kline_data_list)
     return one_minute_kline_data_list
 
 # four hour decision data
@@ -794,7 +812,7 @@ def fetch_four_hour_decision_list():
     start_id = find_four_hour_decision_start_id()
     end_id = find_four_hour_decision_end_id()
     four_hour_decision_list = find_four_hour_decision(start_id, end_id)
-    #four_hour_decision_list = four_hour_decision_list_RemoveLast1Item(four_hour_decision_list)
+    four_hour_decision_list = four_hour_decision_list_RemoveLast1Item(four_hour_decision_list)
     return four_hour_decision_list
 
 # Description: Test data preparation
@@ -802,6 +820,11 @@ def sortDecisionListByPhaseIndex(decision_data_list):
     # 'date' ve ardından 'phaseIndex' ile sıralama yap
     decision_data_list = sorted(decision_data_list, key=lambda obj: (obj.date, obj.phaseIndex))
     return decision_data_list
+
+
+def sortControlDataListByDate(control_data_list):
+    control_data_list = sorted(control_data_list, key=lambda obj: obj.opening_timestamp)
+    return control_data_list
 
 
 def generateBasicTestTupleList():
@@ -813,6 +836,7 @@ def generateBasicTestTupleList():
     control_data_list = removeNoneFromList(control_data_list)
     decision_data_list = removeNoneFromList(decision_data_list)
     decision_data_list = sortDecisionListByPhaseIndex(decision_data_list)
+
 
 
     # decision.id, decision.date, dayKline.openPrice, decision.decision, decision.confidenceRate,dayKline.closePrice,HourlyTuple

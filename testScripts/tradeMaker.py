@@ -747,22 +747,6 @@ def makeTrade(testDataDailyTuple):
     diff_stop_loss_rate_DOWN = 0
     is_take_profit_active = config.take_profit
     take_profit_rate = config.take_profit_rate
-    if testDataDailyTuple[3] == 'STB':
-        if before_cash1 == 0 and before_bitcoin1 == 0:
-            before_cash1 = Decimal(starting_bitcoin) * Decimal(testDataDailyTuple[2])
-            before_bitcoin1 = 0
-        else:
-            if before_bitcoin1 == 0:
-                before_cash1 = before_cash1
-            else:
-                before_cash1 = before_bitcoin1 * testDataDailyTuple[2]
-                before_bitcoin1 = 0
-
-        trade = doTrade(testDataDailyTuple, before_cash1, before_bitcoin1, is_stop_loss_active, stop_loss_rate,
-                        is_short_selling_active, use_different_stop_loss_rate, diff_stop_loss_rate_UP,
-                        diff_stop_loss_rate_DOWN,is_take_profit_active,take_profit_rate)
-
-        return trade
 
     if use_different_stop_loss_rate:
         diff_stop_loss_rate_UP = config.diff_stop_loss_rate_UP
