@@ -522,6 +522,7 @@ def control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours
 def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list):
     start_time = datetime.now()
     print("start_time: ", start_time)
+    i = 0
     control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours_decision_list, four_hours_kline_data_list)
     four_hours_tuple_list = []
     for decision in four_hours_decision_list:
@@ -541,7 +542,17 @@ def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, f
             if decision_date == four_hours_kline_data_item_date:
                 if decision_phase == four_hours_kline_data_item_phase:
                     four_hours_kline_data = four_hours_kline_data_item  # dailyData for the day of decision
-                break
+                    break
+        if four_hours_kline_data is None:
+            raise ValueError("four_hours_kline_data is None.")
+        if phase_one_minute_control_data_list is None:
+            raise ValueError("phase_one_minute_control_data_list is None.")
+        if decision is None:
+            raise ValueError("decision is None.")
+        tuple_time = datetime.now()
+        delta_tuple_time = tuple_time - start_time
+        i += 1
+        print(str(i) + '. Tuple tourmaline süresi: ', delta_tuple_time)
         hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
         four_hours_tuple_list.append(hourlyTuple)
     end_time = datetime.now()
