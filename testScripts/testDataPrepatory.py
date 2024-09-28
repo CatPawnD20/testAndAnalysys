@@ -15,6 +15,7 @@ from databaseScripts.classes.Processable.DailyDecisionV4ScoreDB import DailyDeci
 from databaseScripts.classes.Processable.FourHoursKlineDB import FourHoursKlineDB
 from databaseScripts.classes.Processable.OneDayKlineDB import OneDayKlineDB
 from databaseScripts.classes.Processable.OneHoursKlineDB import OneHoursKlineDB
+from databaseScripts.classes.Processable.OneMinuteKlineBulkDB import OneMinuteKlineBulkDB
 from databaseScripts.classes.Processable.OneMinuteKlineDB import OneMinuteKlineDB
 from testScripts import testDateConfig
 
@@ -578,19 +579,19 @@ def includeConfidenceRate(testTupleList):
         return arrangeTestTuple(testTupleList, confidence_rate)
     return testTupleList
 
-# one minute kline data
+
 def find_OneMinuteKlineData(start_id, end_id):
     # Veritabanına bağlan
     postgre_obj.connect_db()
 
-    # OneHoursKlineDB sınıfını oluştur
-    one_minute_kline_db = OneMinuteKlineDB(postgre_obj)
+    # OneMinuteKlineDB sınıfını oluştur
+    one_minute_kline_bulk_db = OneMinuteKlineBulkDB(postgre_obj)
 
+    # ID aralığını oluştur
     listOfOneMinuteKlineDataId = list(range(start_id, end_id + 1))
-    one_minute_kline_data_list = []
-    for id in listOfOneMinuteKlineDataId:
-        one_minute_kline = one_minute_kline_db.get_one_minute_kline(id)
-        one_minute_kline_data_list.append(one_minute_kline)
+
+    # Tek sorguda tüm verileri çek
+    one_minute_kline_data_list = one_minute_kline_bulk_db.get_one_minute_kline_bulk(listOfOneMinuteKlineDataId)
 
     # Veritabanı bağlantısını kapat
     postgre_obj.disconnect_db()
@@ -663,11 +664,13 @@ def calculate_end_id_oneMinuteKline(last_one_minute_kline):
     return end_id
 
 
+
 def find_OneMinuteKlineData_end_id():
     # Veritabanına bağlan
     postgre_obj.connect_db()
 
     # OneHoursKlineDB sınıfını oluştur
+
     one_minute_kline_db = OneMinuteKlineDB(postgre_obj)
 
     # Veritabanından last id'yi getir
@@ -684,7 +687,11 @@ def find_OneMinuteKlineData_end_id():
 def fetch_one_minute_kline_data_list():
     start_id = find_OneMinuteKlineData_start_id()
     end_id = find_OneMinuteKlineData_end_id()
+    start_time = datetime.now()
     one_minute_kline_data_list = find_OneMinuteKlineData(start_id, end_id)
+    end_time = datetime.now()
+    delta_time = end_time - start_time
+    print("Database Tamamlanma süresi: ", delta_time)
     #one_minute_kline_data_list = one_minute_kline_data_list_RemoveFirst240Item(one_minute_kline_data_list)
     return one_minute_kline_data_list
 
