@@ -37,33 +37,29 @@ def make_set_dict(dataTupleList, confidence_rate_list, table_list):
         SetDict[confidence_rate_list[i]] = dataTupleList[i*len(table_list):(i+1)*len(table_list)]
     return SetDict
 
-
 def write_auto_test():
     dataTupleList = make_auto_test()
-    #write the results to a file with header
-    #writeTo cvs
     confidence_rate_list = config.confidence_rate_list
-    confidence_count = len(confidence_rate_list)
     table_list = prepare_test_table_list()
     table_count = len(table_list)
 
     SetDict = make_set_dict(dataTupleList, confidence_rate_list, table_list)
 
-    #write the results to a file with header
-    #write this sets to a cvs file
-    # write each set side by side
-    # use headers for each set
-    # use table names as rows
-    # make csv Tables for each SET
-
     with open('auto_test_results.csv', 'w') as f:
-        f.write('table,')
+        # Write headers for each set
+        headers = []
         for confidence_rate in confidence_rate_list:
-            f.write(f'winCount_{confidence_rate},winRate_{confidence_rate},loseCount_{confidence_rate},loseRate_{confidence_rate},lastMoney_{confidence_rate},')
-        f.write('\n')
-        for table in table_list:
-            f.write(f'{table},')
+            headers.extend([f'Table ({confidence_rate})', f'Win Count ({confidence_rate})', f'Win Rate ({confidence_rate})', f'Lose Count ({confidence_rate})', f'Lose Rate ({confidence_rate})', f'Last Money ({confidence_rate})'])
+        f.write(','.join(headers) + '\n')
+
+        # Write data for each table
+        for i in range(table_count):
+            row = []
             for confidence_rate in confidence_rate_list:
-                dataTuple = SetDict[confidence_rate][table_list.index(table)]
-                f.write(f'{dataTuple[1]},{dataTuple[2]},{dataTuple[3]},{dataTuple[4]},{dataTuple[5]},')
-            f.write('\n')
+                dataTuple = SetDict[confidence_rate][i]
+                formatted_last_money = f'"{dataTuple[5]:,}"'
+                row.extend([dataTuple[0], dataTuple[1], dataTuple[2], dataTuple[3], dataTuple[4], formatted_last_money])
+            f.write(','.join(map(str, row)) + '\n')
+
+    print('Auto Test Results are written to auto_test_results.csv')
+

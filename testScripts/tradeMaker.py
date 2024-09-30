@@ -296,6 +296,8 @@ def calculate_result_rate(trade_before_cash, trade_before_btc, trade_after_cash,
                           trade_starting_price, trade_ending_price, trade_decision, trade_max_opposite_price_move_rate_tuple,
                           is_stop_loss_active, stop_loss_rate, is_short_selling_active, trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate):
     result_rate = 0
+    trade_before_btc = Decimal(trade_before_btc)
+    trade_starting_price = Decimal(trade_starting_price)
     if is_take_profit_active and is_stop_loss_active:
         if trade_max_opposite_price_move_rate_tuple[0] >= stop_loss_rate and trade_max_profit_rate_tuple[0] >= take_profit_rate:
             if trade_max_opposite_price_move_rate_tuple[1] < trade_max_profit_rate_tuple[1]:
@@ -503,9 +505,8 @@ def calculate_result_rate(trade_before_cash, trade_before_btc, trade_after_cash,
                 result_rate = trade_after_cash / trade_before_cash
         elif trade_decision == 'DOWN':
             if trade_before_cash == 0:
-                trade_before_cash = float(trade_before_btc) * float(trade_starting_price)
-            result_rate = float(trade_after_cash) / float(trade_before_cash)
-
+                trade_before_cash = trade_before_btc * trade_starting_price
+            result_rate = trade_after_cash / trade_before_cash
 
         if result_rate < 1:
             result_rate = 1 - result_rate
