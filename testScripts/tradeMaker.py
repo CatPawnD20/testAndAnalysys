@@ -503,8 +503,9 @@ def calculate_result_rate(trade_before_cash, trade_before_btc, trade_after_cash,
                 result_rate = trade_after_cash / trade_before_cash
         elif trade_decision == 'DOWN':
             if trade_before_cash == 0:
-                trade_before_cash = trade_before_btc * trade_starting_price
-            result_rate = trade_after_cash / trade_before_cash
+                trade_before_cash = float(trade_before_btc) * float(trade_starting_price)
+            result_rate = float(trade_after_cash) / float(trade_before_cash)
+
 
         if result_rate < 1:
             result_rate = 1 - result_rate

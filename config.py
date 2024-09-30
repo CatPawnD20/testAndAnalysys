@@ -8,13 +8,13 @@ end_date = '2024-09-25' # end date must be one day before from the last date of 
 
 #ortalama negatif hareket : -0.007
 
-starting_bitcoin = 1  # starting bitcoin amount
+starting_bitcoin = 0.003  # starting bitcoin amount
 
 decisionType = "fi_v1_xgb_body_4h" #name of the decision table
 
 # Confidence rate
 confidence_rate_include = True  # if True, confidence_rate will be included in the test data
-confidence_rate = 0.6   # confidence_rate and above will be included in the test data
+confidence_rate = 0.7   # confidence_rate and above will be included in the test data
 
 
 stb_trade_print = True  # if True, STB trades will be printed
@@ -52,3 +52,5 @@ table_list = [
     "fi_v6_xgb_body_4h",
     "mc_v6_xgb_body_4h"
 ]
+
+confidence_rate_list = [0.5, 0.6]
