@@ -493,14 +493,25 @@ def removeNoneFromList(list):
     return tempList
 
 
-def calculate_phase(opening_timestamp):
-    if not hasattr(opening_timestamp, 'hour'):
-        raise ValueError("opening_timestamp parametresi 'hour' (saat) özelliğine sahip olmalıdır.")
-    hour = opening_timestamp.hour
+def calculate_phase(closing_timestamp):
+    if not hasattr(closing_timestamp, 'hour'):
+        raise ValueError("closing_timestamp parametresi 'hour' (saat) özelliğine sahip olmalıdır.")
+    hour = closing_timestamp.hour
     if not 0 <= hour <= 23:
         raise ValueError("Saat değeri 0 ile 23 arasında olmalıdır.")
-    phase = (hour // 4) + 1
-    return phase
+    if hour < 4:
+        phase = 1
+    elif hour < 8:
+        phase = 2
+    elif hour < 12:
+        phase = 3
+    elif hour < 16:
+        phase = 4
+    elif hour < 20:
+        phase = 5
+    else:
+        phase = 6
+        return phase
 
 
 def control_item_count_for_argument_lists(one_minute_kline_data_list, four_hours_decision_list,four_hours_kline_data_list):
@@ -527,22 +538,22 @@ def calculate_phase(opening_timestamp):
     if not 0 <= hour <= 23:
         raise ValueError("Saat değeri 0 ile 23 arasında olmalıdır.")
     if hour < 4:
-        phase = 6
-        return phase
-    if hour < 8:
         phase = 1
         return phase
-    if hour < 12:
+    if hour < 8:
         phase = 2
         return phase
-    if hour < 16:
+    if hour < 12:
         phase = 3
         return phase
-    if hour < 20:
+    if hour < 16:
         phase = 4
         return phase
-    if hour < 24:
+    if hour < 20:
         phase = 5
+        return phase
+    if hour < 24:
+        phase = 6
         return phase
     return 0
 
@@ -552,22 +563,30 @@ def make_data_tuple_list(one_minute_kline_data_list, four_hours_decision_list, f
 
     one_minute_index = defaultdict(list)
     for item in one_minute_kline_data_list:
-        key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
+        key = (item.closing_timestamp.date(), calculate_phase(item.closing_timestamp))
         one_minute_index[key].append(item)
 
     four_hours_index = {}
     for item in four_hours_kline_data_list:
-        key = (item.opening_timestamp.date(), calculate_phase(item.opening_timestamp))
+        key = (item.closing_timestamp.date(), calculate_phase(item.closing_timestamp))
         four_hours_index[key] = item
 
     # Decision listesi üzerinden işlem
     four_hours_tuple_list = []
     for decision in four_hours_decision_list:
-        key = (decision.date.date(), decision.phaseIndex)
-        phase_one_minute_control_data_list = one_minute_index.get(key, [])
-        four_hours_kline_data = four_hours_index.get(key)
-        hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
-        four_hours_tuple_list.append(hourlyTuple)
+        if decision.phaseIndex == 6:
+            tomorrow = decision.date.date() + timedelta(days=1)
+            key = (tomorrow, 1)
+            phase_one_minute_control_data_list = one_minute_index.get(key, [])
+            four_hours_kline_data = four_hours_index.get(key)
+            hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
+            four_hours_tuple_list.append(hourlyTuple)
+        else:
+            key = (decision.date.date(), decision.phaseIndex + 1)
+            phase_one_minute_control_data_list = one_minute_index.get(key, [])
+            four_hours_kline_data = four_hours_index.get(key)
+            hourlyTuple = prepare_four_hourly_tuple(phase_one_minute_control_data_list, four_hours_kline_data, decision)
+            four_hours_tuple_list.append(hourlyTuple)
     return four_hours_tuple_list
 
 def arrangeTestTuple(testTuple, confidence_rate):
@@ -823,7 +842,7 @@ def sortDecisionListByPhaseIndex(decision_data_list):
 
 
 def sortControlDataListByDate(control_data_list):
-    control_data_list = sorted(control_data_list, key=lambda obj: obj.opening_timestamp)
+    control_data_list = sorted(control_data_list, key=lambda obj: obj.closing_timestamp)
     return control_data_list
 
 
