@@ -9,11 +9,11 @@ def generateTradeList(testDataList):
     for testData in testDataList:
         trade = tradeMaker.makeTrade(testData)
         tradeList.append(trade)
-        if tradeMaker.before_cash == 0 and tradeMaker.before_bitcoin == 0:
+        if tradeMaker.before_cash_global == 0 and tradeMaker.before_bitcoin_global == 0:
             #stop the test if the cash and bitcoin are 0
             break
-    tradeMaker.before_cash = 0
-    tradeMaker.before_bitcoin = 0
+    tradeMaker.before_cash_global = 0
+    tradeMaker.before_bitcoin_global = 0
     return tradeList
 
 
