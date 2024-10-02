@@ -719,7 +719,8 @@ def doTrade(testDataDailyTuple, before_cash_1, before_bitcoin_1, is_stop_loss_ac
         trade_after_btc = useLeverageBTC(trade_after_btc, result_rate)
         trade_after_cash = useLeverageCash(trade_after_cash, result_rate)
         result_rate = useLeverageResultRate(result_rate)
-        trade_state = calculate_trade_state(result_rate, is_stop_loss_active, stop_loss_rate, trade_decision,
+
+    trade_state = calculate_trade_state(result_rate, is_stop_loss_active, stop_loss_rate, trade_decision,
                                             is_short_selling_active, is_take_profit_active, take_profit_rate)
     trade.append(trade_id) #0
     trade.append(trade_date) #1
