@@ -22,22 +22,26 @@ stb_trade_print = True  # if True, STB trades will be printed
 short_selling = True  # if True, short selling will be active
 
 # stop loss
-stop_loss = False  # if True, stop loss will be active
+stop_loss = True  # if True, stop loss will be active
 stop_loss_rate = 0.03  # stop loss rate
 use_different_stop_loss_rate = False  # if True, stop_loss_rate will be different for UP and DOWN decisions
 diff_stop_loss_rate_UP = 0.02  # stop loss rate for UP decisions
 diff_stop_loss_rate_DOWN = 0.02  # stop loss rate for DOWN decisions
 
 #take profit
-take_profit = False  # if True, take profit will be active
+take_profit = True  # if True, take profit will be active
 take_profit_rate = 0.02 # take profit rate
 
 # leverage
-use_leverage = False  # if True, leverage will be active
+use_leverage = True  # if True, leverage will be active
 leverage_rate = 10  # leverage rate
 
-# tableList
 
+#Montly Test --->> reset start money every month
+monthly_test = True
+monthly_test_results = False  # sadece aylık test sonuçlarını görmek için
+
+# tableList
 table_list = [
     "mc_v1_ens_xgb_nn_body_4h",
     #"fi_v1_xgb_body_4h",
