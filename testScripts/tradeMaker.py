@@ -1,12 +1,13 @@
 import csv
 import decimal
+from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
 
 import config
 
 starting_bitcoin = config.starting_bitcoin
-before_bitcoin = 0
-before_cash = 0
+before_bitcoin_global = 0
+before_cash_global = 0
 
 
 def calculateAfterBtc(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
@@ -255,7 +256,8 @@ def calculateAfterCash(trade_before_cash, trade_before_btc, trade_starting_price
                 trade_after_cash = 0
             elif trade_decision == 'DOWN':
                 if trade_before_btc == 0:
-                    trade_before_btc = trade_before_cash / trade_starting_price
+                    trade_before_btc = Decimal(trade_before_cash) / trade_starting_price
+
                 if not is_short_selling_active:
                     trade_after_cash = trade_before_btc * trade_starting_price
                     return trade_after_cash
@@ -506,7 +508,7 @@ def calculate_result_rate(trade_before_cash, trade_before_btc, trade_after_cash,
         elif trade_decision == 'DOWN':
             if trade_before_cash == 0:
                 trade_before_cash = trade_before_btc * trade_starting_price
-            result_rate = trade_after_cash / trade_before_cash
+            result_rate = Decimal(trade_after_cash) / Decimal(trade_before_cash)
 
         if result_rate < 1:
             result_rate = 1 - result_rate
@@ -738,16 +740,77 @@ def doTrade(testDataDailyTuple, before_cash_1, before_bitcoin_1, is_stop_loss_ac
     trade.append(format(trade_max_profit_rate_tuple[0], '.4f'))  # 13rate
     trade.append(format(trade_max_profit_rate_tuple[1]))  # 14time
     trade.append(trade_state) #15
-    global before_cash
-    global before_bitcoin
-    before_cash = trade_after_cash
-    before_bitcoin = trade_after_btc
+    global before_cash_global
+    global before_bitcoin_global
+    before_cash_global = trade_after_cash
+    before_bitcoin_global = trade_after_btc
     return trade
 
 
+def decide_reset_after_month(testDataDailyTuple):
+    monthly_test = config.monthly_test
+    trade_date = testDataDailyTuple[1]
+    trade_day = trade_date.day
+    trade_start_hour = trade_date.hour
+    if trade_day == 1 and monthly_test and trade_start_hour == 0:
+        return True
+    else:
+        return False
+
+
+
+def calculate_trade_before_cash_and_before_bitcoin(testDataDailyTuple, before_cash, before_bitcoin, is_short_selling_active):
+    reset_after_month = decide_reset_after_month(testDataDailyTuple)
+    if before_cash == 0 and before_bitcoin == 0:
+        if is_short_selling_active:
+            if testDataDailyTuple[3] == 'UP':
+                before_cash = Decimal(starting_bitcoin) * testDataDailyTuple[2]
+                before_bitcoin = 0
+            elif testDataDailyTuple[3] == 'DOWN':
+                before_cash = 0
+                before_bitcoin = starting_bitcoin
+        else:
+            if testDataDailyTuple[3] == 'UP':
+                before_cash = starting_bitcoin * testDataDailyTuple[2]
+                before_bitcoin = 0
+            elif testDataDailyTuple[3] == 'DOWN':
+                before_cash = starting_bitcoin * testDataDailyTuple[2]
+                before_bitcoin = 0
+    else:
+        if testDataDailyTuple[3] == 'UP':
+            if before_bitcoin == 0:
+                if reset_after_month:
+                    before_cash = Decimal(starting_bitcoin) * testDataDailyTuple[2]
+                else:
+                    before_cash = before_cash
+            else:
+                if reset_after_month:
+                    before_cash = Decimal(starting_bitcoin) * testDataDailyTuple[2]
+                    before_bitcoin = 0
+                else:
+                    before_cash = before_bitcoin * testDataDailyTuple[2]
+                    before_bitcoin = 0
+        elif testDataDailyTuple[3] == 'DOWN':
+            if before_cash == 0:
+                if reset_after_month:
+                    before_cash = 0
+                    before_bitcoin = starting_bitcoin
+                else:
+                    before_cash = 0
+                    before_bitcoin = before_bitcoin
+            else:
+                if reset_after_month:
+                    before_bitcoin = 0
+                    before_cash = Decimal(starting_bitcoin) * testDataDailyTuple[2]
+                else:
+                    before_bitcoin = 0
+                    before_cash = before_cash
+    return before_cash, before_bitcoin
+
+
 def makeTrade(testDataDailyTuple):
-    before_cash1 = before_cash
-    before_bitcoin1 = before_bitcoin
+    before_cash = before_cash_global
+    before_bitcoin = before_bitcoin_global
     is_stop_loss_active = config.stop_loss
     stop_loss_rate = config.stop_loss_rate
     is_short_selling_active = config.short_selling
@@ -757,40 +820,14 @@ def makeTrade(testDataDailyTuple):
     is_take_profit_active = config.take_profit
     take_profit_rate = config.take_profit_rate
 
+
     if use_different_stop_loss_rate:
         diff_stop_loss_rate_UP = config.diff_stop_loss_rate_UP
         diff_stop_loss_rate_DOWN = config.diff_stop_loss_rate_DOWN
 
-    if before_cash1 == 0 and before_bitcoin1 == 0:
-        if is_short_selling_active:
-            if testDataDailyTuple[3] == 'UP':
-                before_cash1 = Decimal(starting_bitcoin) * testDataDailyTuple[2]
-                before_bitcoin1 = 0
-            elif testDataDailyTuple[3] == 'DOWN':
-                before_cash1 = 0
-                before_bitcoin1 = starting_bitcoin
-        else:
-            if testDataDailyTuple[3] == 'UP':
-                before_cash1 = starting_bitcoin * testDataDailyTuple[2]
-                before_bitcoin1 = 0
-            elif testDataDailyTuple[3] == 'DOWN':
-                before_cash1 = starting_bitcoin * testDataDailyTuple[2]
-                before_bitcoin1 = 0
-    else:
-        if testDataDailyTuple[3] == 'UP':
-            if before_bitcoin1 == 0:
-                before_cash1 = before_cash1
-            else:
-                before_cash1 = before_bitcoin1 * testDataDailyTuple[2]
-                before_bitcoin1 = 0
-        elif testDataDailyTuple[3] == 'DOWN':
-            if before_cash1 == 0:
-                before_cash1 = 0
-                before_bitcoin1 = before_bitcoin1
-            else:
-                before_bitcoin1 = 0
-                before_cash1 = before_cash1
-    trade = doTrade(testDataDailyTuple, before_cash1, before_bitcoin1, is_stop_loss_active, stop_loss_rate,
+    before_cash,before_bitcoin = calculate_trade_before_cash_and_before_bitcoin(testDataDailyTuple, before_cash, before_bitcoin, is_short_selling_active)
+
+    trade = doTrade(testDataDailyTuple, before_cash, before_bitcoin, is_stop_loss_active, stop_loss_rate,
                     is_short_selling_active, use_different_stop_loss_rate, diff_stop_loss_rate_UP,
                     diff_stop_loss_rate_DOWN,is_take_profit_active,take_profit_rate)
     return trade
@@ -882,7 +919,7 @@ def controlTrade(trade):
             if Decimal(trade[8]) == 1 or Decimal(trade[8]) == 0:
                 return True
     if Decimal(trade[8]) >= 0:
-        say1 = round(trade[7] / trade[6], 4)
+        say1 = round(trade[7] / Decimal(trade[6]), 4)
         say2 = round(Decimal(trade[8]), 4)
         if say1 == say2:
             return True
@@ -894,7 +931,7 @@ def controlTrade(trade):
             return False
 
     if Decimal(trade[8]) < 0 and Decimal(trade[8]) > -1:
-        say1 = round(trade[7] / trade[6], 4)
+        say1 = round(Decimal(trade[7]) / Decimal(trade[6]), 4)
         say2 = round(Decimal(trade[8]), 4)
         say1 = say1 - 1
         say2 = say2
