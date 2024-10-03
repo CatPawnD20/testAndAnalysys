@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal, ROUND_DOWN
 
 import config
+from testScripts import testMaker
 
 starting_bitcoin = config.starting_bitcoin
 before_bitcoin_global = 0
@@ -760,7 +761,7 @@ def decide_reset_after_month(testDataDailyTuple):
 
 
 def calculate_trade_before_cash_and_before_bitcoin(testDataDailyTuple, before_cash, before_bitcoin, is_short_selling_active):
-    reset_after_month = decide_reset_after_month(testDataDailyTuple)
+    reset_after_month = testMaker.get_reset_for_month()
     if before_cash == 0 and before_bitcoin == 0:
         if is_short_selling_active:
             if testDataDailyTuple[3] == 'UP':
@@ -830,6 +831,7 @@ def makeTrade(testDataDailyTuple):
     trade = doTrade(testDataDailyTuple, before_cash, before_bitcoin, is_stop_loss_active, stop_loss_rate,
                     is_short_selling_active, use_different_stop_loss_rate, diff_stop_loss_rate_UP,
                     diff_stop_loss_rate_DOWN,is_take_profit_active,take_profit_rate)
+
     return trade
 
 
@@ -980,3 +982,53 @@ def lastMoney(tradeList):
     lastTrade = tradeList[-1]
     lastMoney = lastTrade[7]
     return lastMoney
+
+
+def get_first_trade_of_month(tradeList, first_month):
+    for trade in tradeList:
+        trade_date = trade[1]
+        trade_month = trade_date.month
+        if trade_month == first_month:
+            return trade
+
+
+def get_last_trade_of_month(tradeList, first_month):
+    for trade in reversed(tradeList):
+        trade_date = trade[1]
+        trade_month = trade_date.month
+        if trade_month == first_month:
+            return trade
+
+
+
+
+def monthly_result_tuple_list(tradeList):
+    monthly_results = {}
+    for trade in tradeList:
+        trade_month = trade[1].month
+
+        # Skip if the month has already been processed
+        if trade_month in monthly_results:
+            continue
+
+        # Get the first and last trades of the month
+        find_first_trade_of_month = get_first_trade_of_month(tradeList, trade_month)
+        find_entrance_money = find_first_trade_of_month[6]
+
+        find_entrance_money = Decimal(find_entrance_money).quantize(Decimal('0.001'), rounding=ROUND_DOWN)
+        find_last_trade_of_month = get_last_trade_of_month(tradeList, trade_month)
+        find_exit_money = find_last_trade_of_month[7]
+        find_exit_money = Decimal(find_exit_money).quantize(Decimal('0.001'), rounding=ROUND_DOWN)
+
+        # Calculate the rate of return
+        rate_of_return = find_exit_money / find_entrance_money
+        rate_of_return = Decimal(rate_of_return).quantize(Decimal('0.001'), rounding=ROUND_DOWN)
+
+        if find_entrance_money > 2000:
+            find_entrance_money = 0
+        # Store the results in the dictionary
+        monthly_results[trade_month] = (find_entrance_money, find_exit_money, rate_of_return)
+
+    # Convert the dictionary to a list of tuples
+    monthly_result_tuple_list = [(month, *values) for month, values in monthly_results.items()]
+    return monthly_result_tuple_list

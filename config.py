@@ -38,8 +38,8 @@ leverage_rate = 10  # leverage rate
 
 
 #Montly Test --->> reset start money every month
-monthly_test = True
-monthly_test_results = False  # sadece aylık test sonuçlarını görmek için
+monthly_test = True #Aylık test yapmak için zorunludur.
+monthly_auto_test_results = True  # sadece aylık test sonuçlarını görmek için
 
 # tableList
 table_list = [
