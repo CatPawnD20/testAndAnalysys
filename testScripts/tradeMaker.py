@@ -674,78 +674,160 @@ def doTrade(testDataDailyTuple, before_cash_1, before_bitcoin_1, is_stop_loss_ac
     # trade has these elements: date, decision, confidence_rate,before_cash,before_btc,
     # starting_price, ending_price,after_cash,after_btc,result_rate, stop_loss_rate, max_opposite_price_move_rate ,
     # trade_state
-
-    is_leverage_active = config.use_leverage
-    trade = []
-    trade_id = testDataDailyTuple[0]
-    trade_date = testDataDailyTuple[1]
-    trade_decision = testDataDailyTuple[3]
-    trade_confidence_rate = testDataDailyTuple[4]
-    trade_before_cash = before_cash_1
-    trade_before_btc = Decimal(before_bitcoin_1)
-    trade_starting_price = Decimal(testDataDailyTuple[2])
-    trade_ending_price = testDataDailyTuple[5]
-    trade_max_profit_rate_tuple = calculate_trade_max_profit_rate(testDataDailyTuple, trade_decision,
-                                                                  is_take_profit_active)
-    trade_max_opposite_price_move_rate_tuple = calculate_max_opposite_price_move_rate(testDataDailyTuple,
-                                                                                      trade_decision,
-                                                                                      is_stop_loss_active)
-    if trade_decision == 'UP':
-        if is_stop_loss_active:
-            if use_different_stop_loss_rate:
-                stop_loss_rate = diff_stop_loss_rate_UP
-            else:
-                stop_loss_rate = stop_loss_rate
-    if trade_decision == 'DOWN':
-        if is_stop_loss_active:
-            if use_different_stop_loss_rate:
-                stop_loss_rate = diff_stop_loss_rate_DOWN
-            else:
-                stop_loss_rate = stop_loss_rate
-    trade_after_btc = calculateAfterBtc(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
-                                        is_stop_loss_active, stop_loss_rate, use_different_stop_loss_rate,
-                                        diff_stop_loss_rate_UP, trade_max_opposite_price_move_rate_tuple,
-                                        trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
-
-    trade_after_cash = calculateAfterCash(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
-                                          is_stop_loss_active, stop_loss_rate, use_different_stop_loss_rate,
-                                          trade_ending_price,
-                                          trade_max_opposite_price_move_rate_tuple, diff_stop_loss_rate_DOWN,
-                                          is_short_selling_active, diff_stop_loss_rate_UP,
-                                          trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
-    result_rate = calculate_result_rate(before_cash_1, before_bitcoin_1, trade_after_cash, trade_after_btc,
-                                        trade_starting_price, trade_ending_price, trade_decision,
-                                        trade_max_opposite_price_move_rate_tuple,
-                                        is_stop_loss_active, stop_loss_rate, is_short_selling_active,
-                                        trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
-    if is_leverage_active:
-        trade_after_btc = useLeverageBTC(trade_after_btc, result_rate)
-        trade_after_cash = useLeverageCash(trade_after_cash, result_rate)
-        result_rate = useLeverageResultRate(result_rate)
-
-    trade_state = calculate_trade_state(result_rate, is_stop_loss_active, stop_loss_rate, trade_decision,
-                                            is_short_selling_active, is_take_profit_active, take_profit_rate)
-    trade.append(trade_id) #0
-    trade.append(trade_date) #1
-    trade.append(trade_decision) #2
-    trade.append(trade_confidence_rate) #3
-    trade.append(trade_before_cash) #4
-    trade.append(trade_before_btc) #5
-    trade.append(trade_starting_price) #6
-    trade.append(trade_ending_price) #7
-    trade.append(trade_after_cash) #8
-    trade.append(trade_after_btc) #9
-    trade.append(format(result_rate, '.4f')) #10
-    trade.append(format(trade_max_opposite_price_move_rate_tuple[0], '.4f')) #11rate
-    trade.append(format(trade_max_opposite_price_move_rate_tuple[1])) #12time
-    trade.append(format(trade_max_profit_rate_tuple[0], '.4f'))  # 13rate
-    trade.append(format(trade_max_profit_rate_tuple[1]))  # 14time
-    trade.append(trade_state) #15
     global before_cash_global
     global before_bitcoin_global
-    before_cash_global = trade_after_cash
-    before_bitcoin_global = trade_after_btc
-    return trade
+    gradual_take_profit = config.gradual_take_profit
+    if gradual_take_profit:
+        gradual_take_profit_pace = config.gradual_take_profit_pace
+        main_take_profit_rate = take_profit_rate
+        is_leverage_active = config.use_leverage
+        trade = []
+        trade_id = testDataDailyTuple[0]
+        trade_date = testDataDailyTuple[1]
+        trade_decision = testDataDailyTuple[3]
+        trade_confidence_rate = testDataDailyTuple[4]
+        trade_before_cash = before_cash_1
+        trade_before_btc = Decimal(before_bitcoin_1)
+        trade_starting_price = Decimal(testDataDailyTuple[2])
+        trade_ending_price = testDataDailyTuple[5]
+        trade_max_profit_rate_tuple = calculate_trade_max_profit_rate(testDataDailyTuple, trade_decision,
+                                                                      is_take_profit_active)
+        trade_max_opposite_price_move_rate_tuple = calculate_max_opposite_price_move_rate(testDataDailyTuple,
+                                                                                          trade_decision,
+                                                                                          is_stop_loss_active)
+        if trade_decision == 'UP':
+            if is_stop_loss_active:
+                if use_different_stop_loss_rate:
+                    stop_loss_rate = diff_stop_loss_rate_UP
+                else:
+                    stop_loss_rate = stop_loss_rate
+        if trade_decision == 'DOWN':
+            if is_stop_loss_active:
+                if use_different_stop_loss_rate:
+                    stop_loss_rate = diff_stop_loss_rate_DOWN
+                else:
+                    stop_loss_rate = stop_loss_rate
+
+        trade_after_btc = calculateAfterBtc(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
+                                            is_stop_loss_active, stop_loss_rate, use_different_stop_loss_rate,
+                                            diff_stop_loss_rate_UP, trade_max_opposite_price_move_rate_tuple,
+                                            trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
+
+        trade_after_cash = calculateAfterCash(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
+                                              is_stop_loss_active, stop_loss_rate, use_different_stop_loss_rate,
+                                              trade_ending_price,
+                                              trade_max_opposite_price_move_rate_tuple, diff_stop_loss_rate_DOWN,
+                                              is_short_selling_active, diff_stop_loss_rate_UP,
+                                              trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
+        result_rate = calculate_result_rate(before_cash_1, before_bitcoin_1, trade_after_cash, trade_after_btc,
+                                            trade_starting_price, trade_ending_price, trade_decision,
+                                            trade_max_opposite_price_move_rate_tuple,
+                                            is_stop_loss_active, stop_loss_rate, is_short_selling_active,
+                                            trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
+        if is_leverage_active:
+            trade_after_btc = useLeverageBTC(trade_after_btc, result_rate)
+            trade_after_cash = useLeverageCash(trade_after_cash, result_rate)
+            result_rate = useLeverageResultRate(result_rate)
+
+        if result_rate >= gradual_take_profit_pace:
+            take_profit_rate = main_take_profit_rate
+
+
+        trade_state = calculate_trade_state(result_rate, is_stop_loss_active, stop_loss_rate, trade_decision,
+                                            is_short_selling_active, is_take_profit_active, take_profit_rate)
+        trade.append(trade_id)  # 0
+        trade.append(trade_date)  # 1
+        trade.append(trade_decision)  # 2
+        trade.append(trade_confidence_rate)  # 3
+        trade.append(trade_before_cash)  # 4
+        trade.append(trade_before_btc)  # 5
+        trade.append(trade_starting_price)  # 6
+        trade.append(trade_ending_price)  # 7
+        trade.append(trade_after_cash)  # 8
+        trade.append(trade_after_btc)  # 9
+        trade.append(format(result_rate, '.4f'))  # 10
+        trade.append(format(trade_max_opposite_price_move_rate_tuple[0], '.4f'))  # 11rate
+        trade.append(format(trade_max_opposite_price_move_rate_tuple[1]))  # 12time
+        trade.append(format(trade_max_profit_rate_tuple[0], '.4f'))  # 13rate
+        trade.append(format(trade_max_profit_rate_tuple[1]))  # 14time
+        trade.append(trade_state)  # 15
+        before_cash_global = trade_after_cash
+        before_bitcoin_global = trade_after_btc
+        return trade
+    else:
+        is_leverage_active = config.use_leverage
+        trade = []
+        trade_id = testDataDailyTuple[0]
+        trade_date = testDataDailyTuple[1]
+        trade_decision = testDataDailyTuple[3]
+        trade_confidence_rate = testDataDailyTuple[4]
+        trade_before_cash = before_cash_1
+        trade_before_btc = Decimal(before_bitcoin_1)
+        trade_starting_price = Decimal(testDataDailyTuple[2])
+        trade_ending_price = testDataDailyTuple[5]
+        trade_max_profit_rate_tuple = calculate_trade_max_profit_rate(testDataDailyTuple, trade_decision,
+                                                                      is_take_profit_active)
+        trade_max_opposite_price_move_rate_tuple = calculate_max_opposite_price_move_rate(testDataDailyTuple,
+                                                                                          trade_decision,
+                                                                                          is_stop_loss_active)
+        if trade_decision == 'UP':
+            if is_stop_loss_active:
+                if use_different_stop_loss_rate:
+                    stop_loss_rate = diff_stop_loss_rate_UP
+                else:
+                    stop_loss_rate = stop_loss_rate
+        if trade_decision == 'DOWN':
+            if is_stop_loss_active:
+                if use_different_stop_loss_rate:
+                    stop_loss_rate = diff_stop_loss_rate_DOWN
+                else:
+                    stop_loss_rate = stop_loss_rate
+
+        trade_after_btc = calculateAfterBtc(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
+                                            is_stop_loss_active, stop_loss_rate, use_different_stop_loss_rate,
+                                            diff_stop_loss_rate_UP, trade_max_opposite_price_move_rate_tuple,
+                                            trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
+
+        trade_after_cash = calculateAfterCash(trade_before_cash, trade_before_btc, trade_starting_price, trade_decision,
+                                              is_stop_loss_active, stop_loss_rate, use_different_stop_loss_rate,
+                                              trade_ending_price,
+                                              trade_max_opposite_price_move_rate_tuple, diff_stop_loss_rate_DOWN,
+                                              is_short_selling_active, diff_stop_loss_rate_UP,
+                                              trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
+        result_rate = calculate_result_rate(before_cash_1, before_bitcoin_1, trade_after_cash, trade_after_btc,
+                                            trade_starting_price, trade_ending_price, trade_decision,
+                                            trade_max_opposite_price_move_rate_tuple,
+                                            is_stop_loss_active, stop_loss_rate, is_short_selling_active,
+                                            trade_max_profit_rate_tuple, is_take_profit_active, take_profit_rate)
+        if is_leverage_active:
+            trade_after_btc = useLeverageBTC(trade_after_btc, result_rate)
+            trade_after_cash = useLeverageCash(trade_after_cash, result_rate)
+            result_rate = useLeverageResultRate(result_rate)
+
+        trade_state = calculate_trade_state(result_rate, is_stop_loss_active, stop_loss_rate, trade_decision,
+                                            is_short_selling_active, is_take_profit_active, take_profit_rate)
+        trade.append(trade_id)  # 0
+        trade.append(trade_date)  # 1
+        trade.append(trade_decision)  # 2
+        trade.append(trade_confidence_rate)  # 3
+        trade.append(trade_before_cash)  # 4
+        trade.append(trade_before_btc)  # 5
+        trade.append(trade_starting_price)  # 6
+        trade.append(trade_ending_price)  # 7
+        trade.append(trade_after_cash)  # 8
+        trade.append(trade_after_btc)  # 9
+        trade.append(format(result_rate, '.4f'))  # 10
+        trade.append(format(trade_max_opposite_price_move_rate_tuple[0], '.4f'))  # 11rate
+        trade.append(format(trade_max_opposite_price_move_rate_tuple[1]))  # 12time
+        trade.append(format(trade_max_profit_rate_tuple[0], '.4f'))  # 13rate
+        trade.append(format(trade_max_profit_rate_tuple[1]))  # 14time
+        trade.append(trade_state)  # 15
+        before_cash_global = trade_after_cash
+        before_bitcoin_global = trade_after_btc
+        return trade
+
+
+
 
 
 def decide_reset_after_month(testDataDailyTuple):
