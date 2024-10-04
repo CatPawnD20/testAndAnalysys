@@ -22,6 +22,7 @@ def calculate_reset_money(testData):
 
 def generateTradeList(testDataList):
     global reset_for_month
+    reset_for_month = False
     if config.monthly_test:
         tradeList = []
         reset_money_trade_dict = calculate_reset_money(testDataList)

@@ -93,9 +93,14 @@ import openpyxl
 from openpyxl.styles import PatternFill, Font
 from collections import defaultdict
 
+import openpyxl
+from openpyxl.styles import PatternFill, Font
+from collections import defaultdict
+
 def write_monthly_results_to_excel(dataTupleList, excel_filename):
     """
     Aylık sonuçları Excel dosyasına yazar ve modelleri dönüşümlü olarak renklendirir.
+    İlk sayfada tam verileri, ikinci sayfada sadece 'Rate' değerlerini yazar.
 
     Args:
         dataTupleList (list): Her bir model ve confidence rate için sonuçları içeren liste.
@@ -103,7 +108,8 @@ def write_monthly_results_to_excel(dataTupleList, excel_filename):
     """
     # Yeni bir çalışma kitabı oluşturuyoruz
     wb = openpyxl.Workbook()
-    ws = wb.active
+    ws_full = wb.active
+    ws_full.title = "Full Data"
 
     # dataTupleList'i 'confidence_rate' e göre gruplandırıyoruz
     confidence_rate_groups = defaultdict(list)
@@ -111,6 +117,7 @@ def write_monthly_results_to_excel(dataTupleList, excel_filename):
         confidence_rate = data['confidence_rate']
         confidence_rate_groups[confidence_rate].append(data)
 
+    # İlk sayfaya tam verileri yazıyoruz
     row_counter = 1  # Satır sayacımız
 
     for confidence_rate, models_data in confidence_rate_groups.items():
@@ -145,32 +152,32 @@ def write_monthly_results_to_excel(dataTupleList, excel_filename):
         sorted_months = sorted(all_months)
 
         # Başlık satırlarını yazıyoruz
-        # İlk satır: 'ConfidenceRateValue: X', ModelName1, ModelName2, ...
+        # İlk satır: 'ConfidenceRate: X', ModelName1, ModelName2, ...
         header_row_1 = ['ConfidenceRate: ' + str(confidence_rate)]
         for model_name in model_names:
             header_row_1 += [model_name, '', '']
-        ws.append(header_row_1)
+        ws_full.append(header_row_1)
 
         # Model başlıklarını renklendiriyoruz
-        col_counter = 2  # 'ConfidenceRateValue' sütunundan sonra başlıyor
+        col_counter = 2  # 'ConfidenceRate' sütunundan sonra başlıyor
         for idx, model_name in enumerate(model_names):
             model_color = model_color_mapping[model_name]
-            for i in range(3):  # Her model için 3 sütun (Giriş, Çıkış, Rate)
-                cell = ws.cell(row=row_counter, column=col_counter)
+            for i in range(3):  # Her model için 3 sütun (IN, OUT, Rate)
+                cell = ws_full.cell(row=row_counter, column=col_counter)
                 cell.fill = PatternFill(start_color=model_color, end_color=model_color, fill_type='solid')
                 cell.font = Font(bold=True)
                 col_counter += 1
         row_counter += 1
 
-        # İkinci satır: 'Month No', 'Giriş', 'Çıkış', 'Rate' * model sayısı
+        # İkinci satır: 'Month No', 'IN', 'OUT', 'Rate' * model sayısı
         header_row_2 = ['Month No']
         for _ in model_names:
             header_row_2 += ['IN', 'OUT', 'Rate']
-        ws.append(header_row_2)
+        ws_full.append(header_row_2)
 
         # İkinci satırın stilini ayarlıyoruz
         for col in range(1, len(header_row_2) + 1):
-            cell = ws.cell(row=row_counter, column=col)
+            cell = ws_full.cell(row=row_counter, column=col)
             cell.font = Font(bold=True)
         row_counter += 1
 
@@ -184,29 +191,121 @@ def write_monthly_results_to_excel(dataTupleList, excel_filename):
                     row += [find_entrance_money, find_exit_money, rate_of_return]
                 else:
                     row += ['', '', '']  # Veri yoksa boş bırakıyoruz
-            ws.append(row)
+            ws_full.append(row)
 
             # Ay satırını tamamen renklendiriyoruz
             fill_color = 'FFFFFF' if idx % 2 == 0 else 'D3D3D3'  # Beyaz ve açık gri
             for col in range(1, len(row) + 1):
-                cell = ws.cell(row=row_counter, column=col)
+                cell = ws_full.cell(row=row_counter, column=col)
                 cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type='solid')
 
             row_counter += 1
 
         # Boş satır ekliyoruz
-        ws.append([])
+        ws_full.append([])
         row_counter += 1
 
     # Kolon genişliklerini ayarlıyoruz (9 basamaklı bir sayı genişliğinde)
     standard_width = 12  # Yaklaşık 9 basamaklı bir sayı genişliği
-    for column_cells in ws.columns:
-        ws.column_dimensions[column_cells[0].column_letter].width = standard_width
+    for column_cells in ws_full.columns:
+        ws_full.column_dimensions[column_cells[0].column_letter].width = standard_width
+
+    # İkinci sayfaya sadece 'Rate' değerlerini yazıyoruz
+    ws_rate_only = wb.create_sheet(title="Rate Only")
+    row_counter = 1  # İkinci sayfanın satır sayacı
+
+    for confidence_rate, models_data in confidence_rate_groups.items():
+        # Model isimlerini topluyoruz
+        model_names = [data['model'] for data in models_data]
+
+        # Modeller için dönüşümlü renkler tanımlıyoruz
+        model_colors = ['FFFFFF', 'FFCC99']  # Beyaz ve koyu turuncu
+
+        # Modeller için renk eşlemesi yapıyoruz
+        model_color_mapping = {}
+        for idx, model_name in enumerate(model_names):
+            color_index = idx % len(model_colors)
+            model_color_mapping[model_name] = model_colors[color_index]
+
+        # Tüm modellerdeki ayları topluyoruz
+        all_months = set()
+        month_data_per_model = {}
+        for data in models_data:
+            model_name = data['model']
+            monthly_results = data['monthly_results']  # Aylık sonuçlar listesi
+            month_data = {}
+            for month_result in monthly_results:
+                month = month_result[0]  # Ay numarası
+                # Sadece 'Rate' değerini alıyoruz
+                rate_of_return = month_result[3]
+                month_data[month] = rate_of_return
+                all_months.add(month)
+            month_data_per_model[model_name] = month_data
+
+        # Ayları sıralıyoruz
+        sorted_months = sorted(all_months)
+
+        # Başlık satırlarını yazıyoruz
+        # İlk satır: 'ConfidenceRate: X', ModelName1, ModelName2, ...
+        header_row_1 = ['ConfidenceRate: ' + str(confidence_rate)]
+        for model_name in model_names:
+            header_row_1 += [model_name]
+        ws_rate_only.append(header_row_1)
+
+        # Model başlıklarını renklendiriyoruz
+        col_counter = 2  # 'ConfidenceRate' sütunundan sonra başlıyor
+        for idx, model_name in enumerate(model_names):
+            model_color = model_color_mapping[model_name]
+            cell = ws_rate_only.cell(row=row_counter, column=col_counter)
+            cell.fill = PatternFill(start_color=model_color, end_color=model_color, fill_type='solid')
+            cell.font = Font(bold=True)
+            col_counter += 1
+        row_counter += 1
+
+        # İkinci satır: 'Month No', 'Rate' * model sayısı
+        header_row_2 = ['Month No']
+        for _ in model_names:
+            header_row_2 += ['Rate']
+        ws_rate_only.append(header_row_2)
+
+        # İkinci satırın stilini ayarlıyoruz
+        for col in range(1, len(header_row_2) + 1):
+            cell = ws_rate_only.cell(row=row_counter, column=col)
+            cell.font = Font(bold=True)
+        row_counter += 1
+
+        # Verileri yazıyoruz
+        for idx, month in enumerate(sorted_months):
+            row = [str(month) + '. Ay']  # Ay numarası
+            for model_name in model_names:
+                month_data = month_data_per_model.get(model_name, {})
+                if month in month_data:
+                    rate_of_return = month_data[month]
+                    row += [rate_of_return]
+                else:
+                    row += ['']  # Veri yoksa boş bırakıyoruz
+            ws_rate_only.append(row)
+
+            # Ay satırını tamamen renklendiriyoruz
+            fill_color = 'FFFFFF' if idx % 2 == 0 else 'D3D3D3'  # Beyaz ve açık gri
+            for col in range(1, len(row) + 1):
+                cell = ws_rate_only.cell(row=row_counter, column=col)
+                cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type='solid')
+
+            row_counter += 1
+
+        # Boş satır ekliyoruz
+        ws_rate_only.append([])
+        row_counter += 1
+
+    # Kolon genişliklerini ayarlıyoruz (Rate Only sayfası)
+    standard_width = 12
+    for column_cells in ws_rate_only.columns:
+        ws_rate_only.column_dimensions[column_cells[0].column_letter].width = standard_width
 
     # Excel dosyasını kaydediyoruz
     wb.save(excel_filename)
     print(f'Veriler {excel_filename} dosyasına yazıldı.')
-
 
 
 def do_and_write_auto_test_monthly():
