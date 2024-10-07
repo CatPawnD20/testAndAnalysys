@@ -267,6 +267,7 @@ def calculate_start_id_fourHourKline(last_four_hour_kline):
     # sonFourHourKline'in tarihini ve id'sini al
     last_four_hour_kline_date = last_four_hour_kline.opening_timestamp.replace(tzinfo=None)
     last_four_hour_kline_id = last_four_hour_kline.id
+    last_period = last_four_hour_kline_date.hour // 4
     # start_date'i,last_four_hour_kline_date ve last_four_hour_kline_id kullanarak start_id'yi hesapla
     if start_date == last_four_hour_kline_date:
         start_id = last_four_hour_kline_id
@@ -280,7 +281,7 @@ def calculate_start_id_fourHourKline(last_four_hour_kline):
         difference_days = difference.days + 1
         difference_four_hours = difference_days * 6
         # start_id'yi hesapla
-        start_id = last_four_hour_kline_id + difference_four_hours + 1
+        start_id = last_four_hour_kline_id + difference_four_hours + 2 + last_period
 
     return start_id
 
@@ -307,6 +308,8 @@ def calculate_end_id_fourHourKline(last_four_hour_kline):
     # sonOneHourKline'in tarihini ve id'sini al
     last_four_hour_kline_date = last_four_hour_kline.opening_timestamp.replace(tzinfo=None)
     last_four_hour_kline_id = last_four_hour_kline.id
+    last_period = last_four_hour_kline_date.hour // 4
+
     # end_date'i,last_four_hour_kline_date ve last_four_hour_kline_id kullanarak start_id'yi hesapla
     if end_date == last_four_hour_kline_date:
         end_id = last_four_hour_kline_id
@@ -320,7 +323,7 @@ def calculate_end_id_fourHourKline(last_four_hour_kline):
         difference_days = difference.days
         difference_hours = difference_days * 6
         # start_id'yi hesapla
-        end_id = last_four_hour_kline_id + difference_hours + 6
+        end_id = last_four_hour_kline_id + difference_hours + 7 + last_period
     return end_id
 
 
@@ -480,6 +483,8 @@ def prepare_four_hourly_tuple(hourlyDataList, dailyData, decision):
     # hourKline.openDate,dayKline.openPrice,decision.decision,decision.confidenceRate,hourKline.closePrice
     hourlyTuple = []
     for hourlyDataItem in hourlyDataList:
+        if dailyData is None:
+            print("dailyData is None")
         hourlyTuple.append((hourlyDataItem.opening_timestamp, dailyData.opening_price, decision.decision,
                             decision.confidenceRate, hourlyDataItem.closing_price, hourlyDataItem.high_price,hourlyDataItem.low_price))
     return hourlyTuple

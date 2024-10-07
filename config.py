@@ -48,17 +48,17 @@ monthly_auto_test_results = False  # sadece aylık test sonuçlarını görmek i
 # tableList
 table_list = [
     "mc_v1_ens_xgb_nn_body_4h",
-    #"fi_v1_xgb_body_4h",
-    #"fi_v1_ens_xgb_lr_body_4h",
-    #"fi_v2_xgb_body_4h",
-    #"fi_v3_xgb_body_4h",
+    "fi_v1_xgb_body_4h",
+    "fi_v1_ens_xgb_lr_body_4h",
+    "fi_v2_xgb_body_4h",
+    "fi_v3_xgb_body_4h",
     "mc_v3_ens_xgb_nn_body_4h", #basarı artısı yetersız
-    #"fi_v4_xgb_body_4h",
-    "mc_v4_ens_xgb_nn_body_4h", #fav olma yolunda
-    #"mc_v4_xgb_body_4h",
-    #"fi_v5_xgb_body_4h",
-    #"fi_v6_xgb_body_4h",
-    #"mc_v6_xgb_body_4h" #Trade sayısında düşüş gereğinden fazla
+    "fi_v4_xgb_body_4h",
+    "mc_v4_ens_xgb_lr_body_4h", #fav olma yolunda
+    "mc_v4_xgb_body_4h",
+    "fi_v5_xgb_body_4h",
+    "fi_v6_xgb_body_4h",
+    "mc_v6_xgb_body_4h" #Trade sayısında düşüş gereğinden fazla
 ]
 
 confidence_rate_list = [0.5, 0.55, 0.6]
