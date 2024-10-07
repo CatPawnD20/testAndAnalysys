@@ -281,7 +281,8 @@ def calculate_start_id_fourHourKline(last_four_hour_kline):
         difference_days = difference.days + 1
         difference_four_hours = difference_days * 6
         # start_id'yi hesapla
-        start_id = last_four_hour_kline_id + difference_four_hours + 2 + last_period
+        start_id = last_four_hour_kline_id + difference_four_hours - 2
+        start_id = start_id + last_period
 
     return start_id
 
@@ -308,8 +309,12 @@ def calculate_end_id_fourHourKline(last_four_hour_kline):
     # sonOneHourKline'in tarihini ve id'sini al
     last_four_hour_kline_date = last_four_hour_kline.opening_timestamp.replace(tzinfo=None)
     last_four_hour_kline_id = last_four_hour_kline.id
-    last_period = last_four_hour_kline_date.hour // 4
 
+    last_period = calculate_phase(last_four_hour_kline_date)
+    if last_period != 6:
+        # last_four_hour_kline_date'den 1 gün önceki tarihi hesapla
+        last_four_hour_kline_date = last_four_hour_kline_date - timedelta(days=1)
+        last_four_hour_kline_id = last_four_hour_kline_id - last_period
     # end_date'i,last_four_hour_kline_date ve last_four_hour_kline_id kullanarak start_id'yi hesapla
     if end_date == last_four_hour_kline_date:
         end_id = last_four_hour_kline_id
@@ -320,10 +325,11 @@ def calculate_end_id_fourHourKline(last_four_hour_kline):
         # end_date_obj ve last_four_hour_kline_date_obj arasındaki farkı hesapla
         difference = end_date_obj - last_four_hour_kline_date
         # difference'ı gün cinsinden al
-        difference_days = difference.days
+        difference_days = difference.days + 1
         difference_hours = difference_days * 6
         # start_id'yi hesapla
-        end_id = last_four_hour_kline_id + difference_hours + 7 + last_period
+        end_id = last_four_hour_kline_id + difference_hours
+        end_id = end_id
     return end_id
 
 
@@ -747,7 +753,7 @@ def calculate_start_id_four_hour_decision(last_decision):
         difference_days = difference.days
         difference_four_hours = difference_days * 6
         # start_id'yi hesapla
-        start_id = last_decision_id + difference_four_hours + 2
+        start_id = last_decision_id + difference_four_hours + 1
     return start_id
 
 
@@ -786,7 +792,7 @@ def calculate_end_id_four_hour_decision(last_decision):
         difference_days = difference.days
         difference_four_hours = difference_days * 6
         # start_id'yi hesapla
-        end_id = last_decision_id + difference_four_hours + 1
+        end_id = last_decision_id + difference_four_hours
     return end_id
 
 
@@ -836,6 +842,7 @@ def fetch_four_hour_decision_list():
     start_id = find_four_hour_decision_start_id()
     end_id = find_four_hour_decision_end_id()
     four_hour_decision_list = find_four_hour_decision(start_id, end_id)
+    four_hour_decision_list = sortDecisionListByPhaseIndex(four_hour_decision_list)
     four_hour_decision_list = four_hour_decision_list_RemoveLast1Item(four_hour_decision_list)
     return four_hour_decision_list
 
@@ -860,6 +867,10 @@ def generateBasicTestTupleList():
     control_data_list = removeNoneFromList(control_data_list)
     decision_data_list = removeNoneFromList(decision_data_list)
     decision_data_list = sortDecisionListByPhaseIndex(decision_data_list)
+
+    reverse_control_data_list = control_data_list[::-1]
+    reverse_decision_data_list = decision_data_list[::-1]
+    reverse_source_data_list = source_data_list[::-1]
 
 
 

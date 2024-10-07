@@ -10,7 +10,7 @@ end_date = '2024-09-25' # end date must be one day before from the last date of 
 
 starting_bitcoin = 0.003  # starting bitcoin amount
 
-decisionType = "mc_v1_ens_xgb_nn_body_4h" #name of the decision table
+decisionType = "fi_v1_xgb_body_4h" #name of the decision table
 
 # Confidence rate
 confidence_rate_include = True  # if True, confidence_rate will be included in the test data
@@ -33,7 +33,7 @@ take_profit = True  # if True, take profit will be active
 take_profit_rate = 0.02 # take profit rate
 
 # gradual take profit
-gradual_take_profit = True  # if True, gradual take profit will be active
+gradual_take_profit = False  # if True, gradual take profit will be active
 gradual_take_profit_pace = 0.01  # gradual take profit pace
 
 # leverage
@@ -61,4 +61,4 @@ table_list = [
     "mc_v6_xgb_body_4h" #Trade sayısında düşüş gereğinden fazla
 ]
 
-confidence_rate_list = [0.5, 0.55, 0.6]
+confidence_rate_list = [0.5]
