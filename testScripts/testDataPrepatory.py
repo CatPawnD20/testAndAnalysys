@@ -17,6 +17,7 @@ from databaseScripts.classes.Processable.OneDayKlineDB import OneDayKlineDB
 from databaseScripts.classes.Processable.OneHoursKlineDB import OneHoursKlineDB
 from databaseScripts.classes.Processable.OneMinuteKlineBulkDB import OneMinuteKlineBulkDB
 from databaseScripts.classes.Processable.OneMinuteKlineDB import OneMinuteKlineDB
+from databaseScripts.databaseController import get_four_hours_kline
 from testScripts import testDateConfig
 
 # Description: Data sets for the test cases.
@@ -265,26 +266,29 @@ def find_FourHourKlineData(start_id, end_id):
 
 def calculate_start_id_fourHourKline(last_four_hour_kline):
     # sonFourHourKline'in tarihini ve id'sini al
-    last_four_hour_kline_date = last_four_hour_kline.opening_timestamp.replace(tzinfo=None)
+    last_four_hour_kline_date = last_four_hour_kline.closing_timestamp.replace(tzinfo=None)
     last_four_hour_kline_id = last_four_hour_kline.id
-    last_period = last_four_hour_kline_date.hour // 4
+    last_period = calculate_phase(last_four_hour_kline_date)
     # start_date'i,last_four_hour_kline_date ve last_four_hour_kline_id kullanarak start_id'yi hesapla
     if start_date == last_four_hour_kline_date:
         start_id = last_four_hour_kline_id
     else:
-        # start_date'in tarihini ve last_four_hour_kline_date'in tarihini datetime objesine çevir
+        if last_period != 6:
+            last_four_hour_kline_id = last_four_hour_kline_id - last_period #dogru
+            new_last_four_hour_kline = get_four_hours_kline(last_four_hour_kline_id)
+            last_four_hour_kline = new_last_four_hour_kline
+            last_four_hour_kline_date = last_four_hour_kline.closing_timestamp.replace(tzinfo=None)
         start_date_obj = datetime.strptime(start_date, '%Y-%m-%d')
-
-        # start_date_obj ve last_four_hour_kline_date_obj arasındaki farkı hesapla
         difference = start_date_obj - last_four_hour_kline_date
-        # difference'ı saat cinsinden al
         difference_days = difference.days + 1
         difference_four_hours = difference_days * 6
-        # start_id'yi hesapla
-        start_id = last_four_hour_kline_id + difference_four_hours - 2
-        start_id = start_id + last_period
+        start_id = last_four_hour_kline_id + difference_four_hours + 1
+        return start_id
 
-    return start_id
+
+
+
+
 
 
 def find_FourHourKlineData_start_id():
@@ -307,30 +311,24 @@ def find_FourHourKlineData_start_id():
 
 def calculate_end_id_fourHourKline(last_four_hour_kline):
     # sonOneHourKline'in tarihini ve id'sini al
-    last_four_hour_kline_date = last_four_hour_kline.opening_timestamp.replace(tzinfo=None)
+    last_four_hour_kline_date = last_four_hour_kline.closing_timestamp.replace(tzinfo=None)
     last_four_hour_kline_id = last_four_hour_kline.id
-
     last_period = calculate_phase(last_four_hour_kline_date)
     if last_period != 6:
-        # last_four_hour_kline_date'den 1 gün önceki tarihi hesapla
-        last_four_hour_kline_date = last_four_hour_kline_date - timedelta(days=1)
         last_four_hour_kline_id = last_four_hour_kline_id - last_period
-    # end_date'i,last_four_hour_kline_date ve last_four_hour_kline_id kullanarak start_id'yi hesapla
+        new_last_four_hour_kline = get_four_hours_kline(last_four_hour_kline_id)
+        last_four_hour_kline = new_last_four_hour_kline
+        last_four_hour_kline_date = last_four_hour_kline.closing_timestamp.replace(tzinfo=None)
     if end_date == last_four_hour_kline_date:
+        print("Bilinmiyor Bu hatayı alırsan o zaman incele")
         end_id = last_four_hour_kline_id
-    else:
-        # end_date'in tarihini ve last_four_hour_kline_date'in tarihini datetime objesine çevir
-        end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
-
-        # end_date_obj ve last_four_hour_kline_date_obj arasındaki farkı hesapla
-        difference = end_date_obj - last_four_hour_kline_date
-        # difference'ı gün cinsinden al
-        difference_days = difference.days + 1
-        difference_hours = difference_days * 6
-        # start_id'yi hesapla
-        end_id = last_four_hour_kline_id + difference_hours
-        end_id = end_id
+    end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
+    difference = end_date_obj - last_four_hour_kline_date
+    difference_days = difference.days + 1
+    difference_hours = difference_days * 6
+    end_id = last_four_hour_kline_id + difference_hours
     return end_id
+
 
 
 def find_FourHourKlineData_end_id():
@@ -512,14 +510,19 @@ def calculate_phase(closing_timestamp):
         raise ValueError("Saat değeri 0 ile 23 arasında olmalıdır.")
     if hour < 4:
         phase = 1
+        return phase
     elif hour < 8:
         phase = 2
+        return phase
     elif hour < 12:
         phase = 3
+        return phase
     elif hour < 16:
         phase = 4
+        return phase
     elif hour < 20:
         phase = 5
+        return phase
     else:
         phase = 6
         return phase
